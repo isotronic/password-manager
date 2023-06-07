@@ -1,0 +1,18 @@
+{
+    "Ebay": {
+        "user": "example@email.com",
+        "password": "zF#(e6w&P2RaruRgN)61"
+    },
+    "Amazon": {
+        "user": "example@email.com",
+        "password": "JFx7uK9(K*IPhjh&m1+0"
+    },
+    "Twitter": {
+        "user": "example@email.com",
+        "password": "mI$IWWNiqH353%%9by$h"
+    },
+    "Facebook": {
+        "user": "example@email.com",
+        "password": "G&5&qV2EFr*Ztm(g4Nj5"
+    }
+}

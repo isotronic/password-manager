@@ -1,7 +1,7 @@
+import json
 from tkinter import *
 from tkinter import messagebox
 from random import choice, shuffle
-import pandas
 import pyperclip
 
 
@@ -31,24 +31,66 @@ def generate_password():
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 def save():
     """Check if all the fields have been filled in. If not, then show a warning.
-    If all are populated, then ask the user if the entered data is correct and save the website name,
-    username and password to data.csv"""
-    user_details = {"website": website_input.get(), "user": user_input.get(), "password": password_input.get()}
+    If all are populated, save the website name,
+    username and password to data.json"""
+    website = website_input.get()
+    user = user_input.get()
+    password = password_input.get()
+    new_data = {
+        website: {
+            "user": user,
+            "password": password,
+        }
+    }
 
-    if user_details["website"] == "" or user_details["user"] == "" or user_details["password"] == "":
+    if website == "" or user == "" or password == "":
         messagebox.showwarning(title="Oops", message="You didn't fill in all the fields.\n"
                                                      "Please complete the form and try again.")
     else:
-        continue_save = messagebox.askokcancel(title=user_details["website"],
-                                               message=f"You entered the following details: \nEmail/Username: "
-                                                       f"{user_details['user']} \nPassword: {user_details['password']} "
-                                                       f"\nIs it ok to save?")
-        if continue_save:
-            new_data = pandas.DataFrame([user_details])
-            new_data.to_csv("data.csv", mode='a', index=False, header=False)
+        try:
+            with open("data.json", "r") as data_file:
+                data = json.load(data_file)
+                data.update(new_data)
+        except FileNotFoundError:
+            data = new_data
+
+        with open("data.json", "w") as data_file:
+            json.dump(data, data_file, indent=4)
             website_input.delete(0, END)
             password_input.delete(0, END)
             website_input.focus()
+
+
+# ---------------------------- FIND PASSWORD ------------------------------- #
+def find_password():
+    """Check if the website is in data.json. If not, show a warning. If it is, the retrieve the user and password for
+    the website, show it in a messagebox and copy the password to the clipboard"""
+    search_name = website_input.get().lower()
+    search_result = {}
+
+    if search_name == "":
+        messagebox.showwarning(title="Oops", message="You didn't fill in the 'Website' field.\n"
+                                                     "Please complete the form and try again.")
+    else:
+        try:
+            with open("data.json", "r") as data_file:
+                data = json.load(data_file)
+
+            for entry in data:
+                if search_name == entry.lower():
+                    search_result = data[entry]
+        except FileNotFoundError:
+            messagebox.showwarning(title="Error", message="No data file found.")
+        else:
+            if len(search_result) < 1:
+                messagebox.showwarning(title="No Result",
+                                       message="There are no saved details for the website you are looking for.")
+            else:
+                messagebox.showinfo(title="Search Result", message=f"Login details for {search_name.title()}:\n\n"
+                                                                   f"Email/Username: {search_result['user']}\n"
+                                                                   f"Password: {search_result['password']}\n\n"
+                                                                   f"Password has been copied to the clipboard.")
+                pyperclip.copy(search_result["password"])
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -71,8 +113,8 @@ password_label = Label(text="Password:")
 password_label.grid(row=3, column=0, sticky="W")
 
 # text input fields
-website_input = Entry(width=52)
-website_input.grid(row=1, column=1, columnspan=2, sticky="W")
+website_input = Entry(width=33)
+website_input.grid(row=1, column=1, sticky="W")
 website_input.focus()
 user_input = Entry(width=52)
 user_input.insert(0, "example@email.com")
@@ -81,6 +123,8 @@ password_input = Entry(width=33)
 password_input.grid(row=3, column=1, sticky="W")
 
 # buttons
+search_button = Button(text="Search", width=14, command=find_password)
+search_button.grid(row=1, column=2, sticky="W", padx=(3, 0))
 gen_password_button = Button(text="Generate Password", command=generate_password)
 gen_password_button.grid(row=3, column=2, sticky="W")
 add_button = Button(text="Add", width=44, command=save)
